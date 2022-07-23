@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useMemo,
+} from "react";
 import * as Google from "expo-auth-session/providers/google";
 import * as WebBrowser from "expo-web-browser";
 import {
@@ -62,19 +68,22 @@ export const AuthProvider = ({ children }) => {
       .finally(() => setLoading(false));
   };
 
+  const memoedValue = useMemo(
+    () => ({
+      user,
+      loading,
+      error,
+      logout,
+      signinWithGoogle: () => {
+        setLoading(true);
+        promptAsync({ showInRevents: true });
+      },
+    }),
+    [user, loading, error]
+  );
+
   return (
-    <AuthContext.Provider
-      value={{
-        user,
-        loading,
-        error,
-        logout,
-        signinWithGoogle: () => {
-          setLoading(true);
-          promptAsync({ showInRevents: true });
-        },
-      }}
-    >
+    <AuthContext.Provider value={memoedValue}>
       {!loadingInitial && children}
     </AuthContext.Provider>
   );
