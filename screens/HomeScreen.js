@@ -4,7 +4,7 @@ import tw from "tailwind-rn";
 
 const HomeScreen = () => {
   return (
-    <View style={tw("")}>
+    <View style={tw("flex")}>
       <Text style={tw("text-red-500")}>HomeScreen</Text>
     </View>
   );
