@@ -6,7 +6,7 @@ import {
   TouchableOpacity,
   Text,
 } from "react-native";
-import React from "react";
+import React, { useRef } from "react";
 import useAuth from "../hooks/useAuth";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
@@ -40,6 +40,7 @@ const dummyData = [
 const HomeScreen = () => {
   const { logout, user } = useAuth();
   const navigation = useNavigation();
+  const swipeRef = useRef();
 
   return (
     <SafeAreaView
@@ -76,9 +77,33 @@ const HomeScreen = () => {
       </View>
       <View style={{ flex: 1, margin: -6 }}>
         <Swiper
+          ref={swipeRef}
           stackSize={5}
           cardIndex={0}
           verticalSwipe={false}
+          onSwipedLeft={() => console.log("Swipe Pass")}
+          onSwipedRight={() => console.log("Swipe Match")}
+          backgroundColor="#4FD0E9"
+          overlayLabels={{
+            left: {
+              title: "NOPE",
+              style: {
+                label: {
+                  textAlign: "right",
+                  color: "red",
+                },
+              },
+            },
+            right: {
+              title: "MATCH",
+              style: {
+                label: {
+                  textAlign: "left",
+                  color: "#4DED30",
+                },
+              },
+            },
+          }}
           animateCardOpacity
           cards={dummyData}
           containerStyle={{ backgroundColor: "transparent" }}
@@ -105,13 +130,15 @@ const HomeScreen = () => {
                 style={{
                   position: "absolute",
                   width: "100%",
-                  backgroundColor: "white",
+                  backgroundColor: "white,",
                   flexDirection: "row",
+                  backgroundColor: "white",
                   bottom: 0,
                   justifyContent: "space-between",
                   alignItems: "center",
                   paddingHorizontal: 20,
-                  borderRadius: 15,
+                  borderBottomLeftRadius: 15,
+                  borderBottomRightRadius: 15,
                   paddingVertical: 15,
                   shadowColor: "#000",
                   shadowOffset: {
@@ -134,6 +161,30 @@ const HomeScreen = () => {
             </View>
           )}
         />
+
+        <View
+          style={[
+            { bottom: Platform.OS === "android" ? 35 : 10 },
+            tw("absolute flex-row items-center justify-evenly right-0 left-0"),
+          ]}
+        >
+          <TouchableOpacity
+            onPress={() => swipeRef.current.swipeLeft()}
+            style={tw(
+              "items-center justify-center rounded-full w-16 h-16 bg-red-200"
+            )}
+          >
+            <Entypo name="cross" size={30} color="red" />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => swipeRef.current.swipeRight()}
+            style={tw(
+              "items-center justify-center rounded-full w-16 h-16 bg-green-200"
+            )}
+          >
+            <AntDesign name="heart" size={30} color="green" />
+          </TouchableOpacity>
+        </View>
       </View>
     </SafeAreaView>
   );
