@@ -9,6 +9,9 @@ import {
 import React, { useState } from "react";
 import tw from "tailwind-rn";
 import useAuth from "../hooks/useAuth";
+import { setDoc, doc, serverTimestamp } from "firebase/firestore";
+import { db } from "../firebase";
+import { useNavigation } from "@react-navigation/native";
 
 const ModalScreen = () => {
   const { user } = useAuth();
@@ -16,7 +19,26 @@ const ModalScreen = () => {
   const [job, setJob] = useState(null);
   const [age, setAge] = useState(null);
 
+  const navigation = useNavigation();
+
   const incompleteForm = !image || !job || !age;
+
+  const updateUserProfile = () => {
+    if (incompleteForm) return;
+
+    setDoc(doc(db, "users", user.uid), {
+      id: user.uid,
+      displayName: user.displayName,
+      photoURL: user.photoURL,
+      job: job,
+      age: age,
+      timestamp: serverTimestamp(),
+    })
+      .then(() => {
+        navigation.navigate("Home");
+      })
+      .catch(alert);
+  };
 
   return (
     <View
@@ -38,7 +60,7 @@ const ModalScreen = () => {
       </Text>
       <TextInput
         value={image}
-        onChangeText={(text) => setImage(text)}
+        onChangeText={setImage}
         style={tw("pb-2 text-xl text-center")}
         placeholder="Enter a Profile Pic Url"
       />
@@ -46,8 +68,8 @@ const ModalScreen = () => {
         Step 2: The Job
       </Text>
       <TextInput
-        value={age}
-        onChangeText={(text) => setAge(text)}
+        value={job}
+        onChangeText={setJob}
         style={tw("pb-2 text-xl text-center")}
         placeholder="Enter your Occupation"
       />
@@ -57,13 +79,14 @@ const ModalScreen = () => {
       <TextInput
         maxLength={2}
         keyboardType="numeric"
-        value={job}
-        onChangeText={(text) => setJob(text)}
+        value={age}
+        onChangeText={setAge}
         style={tw("pb-2 text-xl text-center")}
         placeholder="Enter your Age"
       />
       <TouchableOpacity
         disabled={incompleteForm}
+        onPress={updateUserProfile}
         style={[
           { bottom: 50, borderRadius: 15 },
           incompleteForm ? tw("bg-gray-400") : tw("bg-red-400"),
