@@ -12,32 +12,17 @@ import { useNavigation } from "@react-navigation/native";
 import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import Swiper from "react-native-deck-swiper";
 import tw from "tailwind-rn";
-import { collection, doc, onSnapshot } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  getDocs,
+  onSnapshot,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 import { db } from "../firebase";
-
-const dummyData = [
-  {
-    displayName: "Chanakyha",
-
-    occupation: "Full Stack Developer",
-    photoURL: "https://avatars.githubusercontent.com/u/66877639?v=4",
-    age: 18,
-  },
-  {
-    displayName: "Chanakyha",
-
-    occupation: "Full Stack Developer",
-    photoURL: "https://avatars.githubusercontent.com/u/66877639?v=4",
-    age: 18,
-  },
-  {
-    displayName: "Chanakyha",
-
-    occupation: "Full Stack Developer",
-    photoURL: "https://avatars.githubusercontent.com/u/66877639?v=4",
-    age: 18,
-  },
-];
+import { async } from "@firebase/util";
 
 const HomeScreen = () => {
   const { logout, user } = useAuth();
@@ -57,16 +42,38 @@ const HomeScreen = () => {
   }, []);
 
   useEffect(() => {
-    const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
-      setProfiles(
-        snapshot.docs
-          .filter((doc) => doc.id !== user.uid)
-          .map((doc) => ({ id: doc.id, ...doc.data() }))
+    (async () => {
+      let passes = getDocs(collection(db, "users", user.uid, "passes")).then(
+        (snapshot) => snapshot.docs.map((doc) => doc.id)
       );
-    });
-
-    return unsub;
+      passes = await passes;
+      const passedUserIds = passes.length > 0 ? passes : ["test"];
+      console.log(passes);
+      const unsub = onSnapshot(
+        query(
+          collection(db, "users"),
+          where("id", "not-in", [...passedUserIds])
+        ),
+        (snapshot) => {
+          setProfiles(
+            snapshot.docs
+              .filter((doc) => doc.id !== user.uid)
+              .map((doc) => ({ id: doc.id, ...doc.data() }))
+          );
+        }
+      );
+    })();
   }, []);
+
+  const swipeLeft = async (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwiped = profiles[cardIndex];
+    console.log(`You Swiped Pass on ${userSwiped.displayName}`);
+
+    setDoc(doc(db, "users", user.uid, "passes", userSwiped.id), userSwiped);
+  };
+  const swipeRight = async (cardIndex) => {};
 
   return (
     <SafeAreaView
@@ -107,8 +114,12 @@ const HomeScreen = () => {
           stackSize={5}
           cardIndex={0}
           verticalSwipe={false}
-          onSwipedLeft={() => console.log("Swipe Pass")}
-          onSwipedRight={() => console.log("Swipe Match")}
+          onSwipedLeft={(cardIndex) => {
+            swipeLeft(cardIndex);
+          }}
+          onSwipedRight={(cardIndex) => {
+            swipeRight(cardIndex);
+          }}
           backgroundColor="#4FD0E9"
           overlayLabels={{
             left: {
