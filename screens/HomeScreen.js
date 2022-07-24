@@ -6,12 +6,14 @@ import {
   TouchableOpacity,
   Text,
 } from "react-native";
-import React, { useRef } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import useAuth from "../hooks/useAuth";
 import { useNavigation } from "@react-navigation/native";
 import { AntDesign, Entypo, Ionicons } from "@expo/vector-icons";
 import Swiper from "react-native-deck-swiper";
 import tw from "tailwind-rn";
+import { collection, doc, onSnapshot } from "firebase/firestore";
+import { db } from "../firebase";
 
 const dummyData = [
   {
@@ -41,6 +43,30 @@ const HomeScreen = () => {
   const { logout, user } = useAuth();
   const navigation = useNavigation();
   const swipeRef = useRef();
+
+  const [profiles, setProfiles] = useState([]);
+
+  useLayoutEffect(() => {
+    const unsub = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+      if (!snapshot.exists()) {
+        navigation.navigate("Modal");
+      }
+    });
+
+    return unsub;
+  }, []);
+
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, "users"), (snapshot) => {
+      setProfiles(
+        snapshot.docs
+          .filter((doc) => doc.id !== user.uid)
+          .map((doc) => ({ id: doc.id, ...doc.data() }))
+      );
+    });
+
+    return unsub;
+  }, []);
 
   return (
     <SafeAreaView
@@ -105,61 +131,76 @@ const HomeScreen = () => {
             },
           }}
           animateCardOpacity
-          cards={dummyData}
+          cards={profiles}
           containerStyle={{ backgroundColor: "transparent" }}
-          renderCard={(card, id) => (
-            <View
-              key={id}
-              style={{
-                position: "relative",
-                height: "75%",
-                borderRadius: 20,
-              }}
-            >
-              <Image
-                style={{
-                  height: "100%",
-                  width: "100%",
-                  borderRadius: 15,
-                  position: "absolute",
-                  top: 0,
-                }}
-                source={{ uri: card?.photoURL }}
-              />
+          renderCard={(card, id) =>
+            card ? (
               <View
+                key={id}
                 style={{
-                  position: "absolute",
-                  width: "100%",
-                  backgroundColor: "white,",
-                  flexDirection: "row",
-                  backgroundColor: "white",
-                  bottom: 0,
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                  paddingHorizontal: 20,
-                  borderBottomLeftRadius: 15,
-                  borderBottomRightRadius: 15,
-                  paddingVertical: 15,
-                  shadowColor: "#000",
-                  shadowOffset: {
-                    width: 0,
-                    height: 1,
-                  },
-                  shadowOpacity: 0.2,
-                  shadowRadius: 1.41,
-                  elevation: 2,
+                  position: "relative",
+                  height: "75%",
+                  borderRadius: 20,
                 }}
               >
-                <View>
-                  <Text style={tw("text-xl font-bold")}>
-                    {card.displayName}
-                  </Text>
-                  <Text>{card.occupation}</Text>
+                <Image
+                  style={{
+                    height: "100%",
+                    width: "100%",
+                    borderRadius: 15,
+                    position: "absolute",
+                    top: 0,
+                  }}
+                  source={{ uri: card?.photoURL }}
+                />
+                <View
+                  style={{
+                    position: "absolute",
+                    width: "100%",
+                    backgroundColor: "white,",
+                    flexDirection: "row",
+                    backgroundColor: "white",
+                    bottom: 0,
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    paddingHorizontal: 20,
+                    borderBottomLeftRadius: 15,
+                    borderBottomRightRadius: 15,
+                    paddingVertical: 15,
+                    shadowColor: "#000",
+                    shadowOffset: {
+                      width: 0,
+                      height: 1,
+                    },
+                    shadowOpacity: 0.2,
+                    shadowRadius: 1.41,
+                    elevation: 2,
+                  }}
+                >
+                  <View>
+                    <Text style={tw("text-xl font-bold")}>
+                      {card?.displayName}
+                    </Text>
+                    <Text>{card?.job}</Text>
+                  </View>
+                  <Text style={tw("text-2xl")}>{card.age}</Text>
                 </View>
-                <Text style={tw("text-2xl")}>{card.age}</Text>
               </View>
-            </View>
-          )}
+            ) : (
+              <View
+                style={[
+                  tw("relative bg-white justify-center items-center"),
+                  { height: "75%", borderRadius: 15 },
+                ]}
+              >
+                <Text style={tw("pb-5 font-bold")}>No more Profiles</Text>
+                <Image
+                  style={[tw("h-20 w-full"), { height: 100, width: 100 }]}
+                  source={{ uri: "https://links.papareact.com/6gb" }}
+                />
+              </View>
+            )
+          }
         />
 
         <View

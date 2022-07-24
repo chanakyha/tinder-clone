@@ -29,7 +29,7 @@ const ModalScreen = () => {
     setDoc(doc(db, "users", user.uid), {
       id: user.uid,
       displayName: user.displayName,
-      photoURL: user.photoURL,
+      photoURL: image,
       job: job,
       age: age,
       timestamp: serverTimestamp(),
