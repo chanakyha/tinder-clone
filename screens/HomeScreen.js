@@ -42,17 +42,17 @@ const HomeScreen = () => {
 
   useEffect(() => {
     (async () => {
-      let passes = getDocs(collection(db, "users", user.uid, "passes")).then(
-        (snapshot) => snapshot.docs.map((doc) => doc.id)
-      );
-      passes = await passes;
+      let passes = await getDocs(
+        collection(db, "users", user.uid, "passes")
+      ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
       const passedUserIds = passes.length > 0 ? passes : ["test"];
 
-      let swipes = getDocs(collection(db, "users", user.uid, "swipes")).then(
-        (snapshot) => snapshot.docs.map((doc) => doc.id)
-      );
-      swipes = await swipes;
-      const swipedUserIds = passes.length > 0 ? passes : ["test"];
+      let swipes = await getDocs(
+        collection(db, "users", user.uid, "swipes")
+      ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
+
+      const swipedUserIds = swipes.length > 0 ? swipes : ["test"];
+      console.log(swipes);
 
       const unsub = onSnapshot(
         query(
@@ -68,7 +68,7 @@ const HomeScreen = () => {
         }
       );
     })();
-  }, []);
+  }, [db]);
 
   const swipeLeft = async (cardIndex) => {
     if (!profiles[cardIndex]) return;
