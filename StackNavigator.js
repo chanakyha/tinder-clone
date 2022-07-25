@@ -6,6 +6,7 @@ import ModalScreen from "./screens/ModalScreen";
 import ChatScreen from "./screens/ChatScreen";
 import useAuth from "./hooks/useAuth";
 import MatchScreen from "./screens/MatchScreen";
+import MessageScreen from "./screens/MessageScreen";
 
 const Stack = createNativeStackNavigator();
 const StackNavigator = () => {
@@ -18,6 +19,7 @@ const StackNavigator = () => {
           <Stack.Group>
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="Chat" component={ChatScreen} />
+            <Stack.Screen name="Message" component={MessageScreen} />
           </Stack.Group>
           <Stack.Group screenOptions={{ presentation: "modal" }}>
             <Stack.Screen name="Modal" component={ModalScreen} />

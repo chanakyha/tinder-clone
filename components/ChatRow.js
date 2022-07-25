@@ -16,6 +16,11 @@ const ChatRow = ({ matchDetails }) => {
 
   return (
     <TouchableOpacity
+      onPress={() =>
+        navigation.navigate("Message", {
+          matchDetails,
+        })
+      }
       style={[
         styles.cardShadow,
         tw("flex-row rounded-lg bg-white mx-3 my-1 py-3 px-5 items-center"),
