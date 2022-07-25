@@ -22,7 +22,6 @@ import {
   where,
 } from "firebase/firestore";
 import { db } from "../firebase";
-import { async } from "@firebase/util";
 
 const HomeScreen = () => {
   const { logout, user } = useAuth();
@@ -48,11 +47,17 @@ const HomeScreen = () => {
       );
       passes = await passes;
       const passedUserIds = passes.length > 0 ? passes : ["test"];
-      console.log(passes);
+
+      let swipes = getDocs(collection(db, "users", user.uid, "swipes")).then(
+        (snapshot) => snapshot.docs.map((doc) => doc.id)
+      );
+      swipes = await swipes;
+      const swipedUserIds = passes.length > 0 ? passes : ["test"];
+
       const unsub = onSnapshot(
         query(
           collection(db, "users"),
-          where("id", "not-in", [...passedUserIds])
+          where("id", "not-in", [...passedUserIds, ...swipedUserIds])
         ),
         (snapshot) => {
           setProfiles(
@@ -69,11 +74,17 @@ const HomeScreen = () => {
     if (!profiles[cardIndex]) return;
 
     const userSwiped = profiles[cardIndex];
-    console.log(`You Swiped Pass on ${userSwiped.displayName}`);
+    console.log(`You Passed on ${userSwiped.displayName}`);
 
     setDoc(doc(db, "users", user.uid, "passes", userSwiped.id), userSwiped);
   };
-  const swipeRight = async (cardIndex) => {};
+  const swipeRight = async (cardIndex) => {
+    if (!profiles[cardIndex]) return;
+
+    const userSwiped = profiles[cardIndex];
+    console.log(`You Swiped on ${userSwiped.displayName}`);
+    setDoc(doc(db, "users", user.uid, "swipes", userSwiped.id), userSwiped);
+  };
 
   return (
     <SafeAreaView
