@@ -18,10 +18,12 @@ import {
   getDocs,
   onSnapshot,
   query,
+  serverTimestamp,
   setDoc,
   where,
 } from "firebase/firestore";
 import { db } from "../firebase";
+import generateId from "../lib/generateId";
 
 const HomeScreen = () => {
   const { logout, user } = useAuth();
@@ -52,7 +54,6 @@ const HomeScreen = () => {
       ).then((snapshot) => snapshot.docs.map((doc) => doc.id));
 
       const swipedUserIds = swipes.length > 0 ? swipes : ["test"];
-      console.log(swipes);
 
       const unsub = onSnapshot(
         query(
@@ -80,10 +81,45 @@ const HomeScreen = () => {
   };
   const swipeRight = async (cardIndex) => {
     if (!profiles[cardIndex]) return;
-
     const userSwiped = profiles[cardIndex];
-    console.log(`You Swiped on ${userSwiped.displayName}`);
-    setDoc(doc(db, "users", user.uid, "swipes", userSwiped.id), userSwiped);
+
+    const loggedInProfile = await (
+      await getDocs(doc(db, "users", user.uid))
+    ).data();
+
+    getDocs(doc(db, "users", userSwiped.id, "swipes", user.uid)).then(
+      (snapshot) => {
+        if (snapshot.exists()) {
+          console.log(`Hooray you matched with ${userSwiped.displayName}`);
+
+          setDoc(
+            doc(db, "users", user.uid, "swipes", userSwiped.id),
+            userSwiped
+          );
+
+          setDoc(
+            doc(db, "matches", generateId(user.uid, userSwiped.displayName), {
+              users: {
+                [user.uid]: loggedInProfile,
+                [userSwiped.id]: userSwiped,
+              },
+              usersMatched: [user.uid, userSwiped.id],
+              timestamp: serverTimestamp(),
+            })
+          );
+          navigation.navigate("Match", {
+            loggedInProfile,
+            userSwiped,
+          });
+        } else {
+          console.log(`You Swiped on ${userSwiped.displayName}`);
+          setDoc(
+            doc(db, "users", user.uid, "swipes", userSwiped.id),
+            userSwiped
+          );
+        }
+      }
+    );
   };
 
   return (
