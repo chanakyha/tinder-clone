@@ -15,6 +15,7 @@ import tw from "tailwind-rn";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
@@ -84,12 +85,13 @@ const HomeScreen = () => {
     const userSwiped = profiles[cardIndex];
 
     const loggedInProfile = await (
-      await getDocs(doc(db, "users", user.uid))
+      await getDoc(doc(db, "users", user.uid))
     ).data();
 
-    getDocs(doc(db, "users", userSwiped.id, "swipes", user.uid)).then(
+    getDoc(doc(db, "users", userSwiped.id, "swipes", user.uid)).then(
       (snapshot) => {
         if (snapshot.exists()) {
+          console.log("Hello");
           console.log(`Hooray you matched with ${userSwiped.displayName}`);
 
           setDoc(
@@ -97,16 +99,15 @@ const HomeScreen = () => {
             userSwiped
           );
 
-          setDoc(
-            doc(db, "matches", generateId(user.uid, userSwiped.displayName), {
-              users: {
-                [user.uid]: loggedInProfile,
-                [userSwiped.id]: userSwiped,
-              },
-              usersMatched: [user.uid, userSwiped.id],
-              timestamp: serverTimestamp(),
-            })
-          );
+          setDoc(doc(db, "matches", generateId(user.uid, userSwiped.id)), {
+            users: {
+              [user.uid]: loggedInProfile,
+              [userSwiped.id]: userSwiped,
+            },
+            usersMatched: [user.uid, userSwiped.id],
+            timestamp: serverTimestamp(),
+          });
+
           navigation.navigate("Match", {
             loggedInProfile,
             userSwiped,
